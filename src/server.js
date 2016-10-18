@@ -72,7 +72,13 @@ imagesearchRouter.get('/', function (req, res) {
 
 imagesearchRouter.get('/:imageQuery', function (req, res) {
 
-  var url = 'https://www.googleapis.com/customsearch/v1?q='+ req.params.imageQuery +'&cx=009450657259060162830%3Az9mqnzccxpi&searchType=image&key=AIzaSyCGsdsSaRofXRsQzrMn5S1QRw0rCh9lUfU';
+  //console.dir(req);
+  var offset = req.query.offset;
+  var startImageInterval = (offset - 1) * (10);
+  var endImageInterval = (offset) * (10);
+
+  var url = 'https://www.googleapis.com/customsearch/v1?q='+ req.params.imageQuery +'&cx=009450657259060162830%3Az9mqnzccxpi&searchType=image&lowRange='+ startImageInterval + '&key=AIzaSyCGsdsSaRofXRsQzrMn5S1QRw0rCh9lUfU';
+
 
 
 
@@ -84,7 +90,7 @@ imagesearchRouter.get('/:imageQuery', function (req, res) {
   }, function (error, response, body) {
 
     if (!error && response.statusCode === 200) {
-      var json = parseJSON(body);
+      var json = parseJSON(body, offset);
       res.contentType('application/json');
       res.send(json);
       recordQueryToDB(req.params.imageQuery);
@@ -104,9 +110,10 @@ console.log("Server start on http://localhost:3000");
 function parseJSON (json) {
   var arr = [];
 
-  //if(json.items === undefined) return [];
+  if (json.items === undefined) {return arr}
 
-  json.items.forEach(function (elem) {
+  json.items.forEach(function (elem, index) {
+
     var obj = {};
     obj.url = elem.link;
     obj.snippet = elem.title;
